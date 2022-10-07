@@ -11,13 +11,12 @@
 #define SCREEN_HEIGHT 600
 
 #define CONTROL_POINT_LEN 16
-#define POINT_LEN 12
+#define POINT_LEN 10
 
-const Color cp_color = {0,0,0,255};
-const Color p_color = {33,96,31,255};
-const Color bg = {58,58,58,255};
-const Color line_color = {30,0,0,255};
-const Color curve_color = {30,30,200,255};
+const Color cp_color = {0,165,70,255}; // color of control points
+const Color bg = {158,158,158,255}; // background
+const Color line_color = {0,0,100,255}; // debug lines color (lines between control points)
+const Color curve_color = {0,0,0,255}; // bezier curve color
 
 int sdl_check(int code)
 {
@@ -114,7 +113,8 @@ int main()
     float inc = 0.001f;
     bool moving = false; // track if we are moving control points
     int mouse_at_cp = -1; // index of control point where mouse cursor is at
-    int show_lines = 0;
+    int show_lines = 0; // show lines between control points
+    int draw_mode = 0; // draw curve with lines or with squares
 
     while (running) { // main loop
         timer->tick();
@@ -158,6 +158,15 @@ int main()
             if (input_manager->key_pressed(SDL_SCANCODE_D)) {
                 show_lines ^= 1;
             }
+            if (input_manager->key_pressed(SDL_SCANCODE_A)) {
+                draw_mode ^= 1;
+            }
+            if (input_manager->key_pressed(SDL_SCANCODE_R)) {
+                control_points.clear();
+                curve.clear();
+                moving = false;
+                mouse_at_cp = -1;
+            }
 
             timer->update_accumulator();
             input_manager->update_prev_keyboard_state();
@@ -172,11 +181,13 @@ int main()
         if (show_lines) {
             draw_lines(renderer,control_points,line_color);
         }
-        //for (const auto& p:curve) {
-        //    draw_square(renderer,p,POINT_LEN,p_color);
-        //}
-        draw_lines(renderer,curve,curve_color);
-
+        if (draw_mode) {
+            for (const auto& p:curve) {
+                draw_square(renderer,p,POINT_LEN,curve_color);
+            }
+        } else {
+            draw_lines(renderer,curve,curve_color);
+        }
         SDL_RenderPresent(renderer);
     }
     
